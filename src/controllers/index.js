@@ -3,7 +3,7 @@ var moment = require('moment');
 exports.getIndex = function(req, res) {
     var posts = [
        {
-           'content': 'content-1',
+           'content': 'We should have AccessToken and RefreshToken mongoose schemas. Then we should have an oauth2 client such as http://lelylan.github.io/simple-oauth2/ and a rest client like https://www.npmjs.com/package/node-rest-client. We have to combined all of them in one single module.',
            'tags': [
                {
                    'name': 'tag-1'
