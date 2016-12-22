@@ -1,6 +1,14 @@
 var moment = require('moment');
+var client = require('../modules/api/client');
 
 exports.getIndex = function(req, res) {
+    client.getPosts(function(err, responseData) {
+        if(err) {
+            return res.err(err);
+        }
+        console.log(responseData);
+    });
+
     var posts = [
        {
            'content': 'We should have AccessToken and RefreshToken mongoose schemas. Then we should have an oauth2 client such as http://lelylan.github.io/simple-oauth2/ and a rest client like https://www.npmjs.com/package/node-rest-client. We have to combined all of them in one single module.',

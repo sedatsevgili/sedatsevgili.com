@@ -1,15 +1,15 @@
 var mongoose = require('mongoose');
 
 var TokenSchema = new mongoose.Schema({
-    accessToken: {
+    access_token: {
         type: String,
         required: true
     },
-    refreshToken: {
+    refresh_token: {
         type: String,
         required: true
     },
-    expiresIn: {
+    expires_in: {
         type: String,
         required: true
     }
