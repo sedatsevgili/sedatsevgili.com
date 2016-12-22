@@ -3,17 +3,39 @@
 <head>
     <% include ../partials/head %>
 </head>
-<body class="container">
+<body>
 
-    <header>
-        <% include ../partials/header %>
-    </header>
+    <% include ../partials/header %>
 
-    <main>
-        <div class="jumbotron">
-            <h1>Hello Universe!</h1>
+    <!-- Main Content -->
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                <% posts.forEach(function(post) { %>
+                <div class="post-preview">
+                    <a>
+                        <h2 class="post-subtitle">
+                            <%= post.content %>
+                        </h2>
+                    </a>
+                    <p class="post-meta">Posted at <%= post.createdAt %></p>
+                </div>    
+                <hr>
+                <% }); %>
+                <!-- Pager -->
+                <%#
+                <ul class="pager">
+                    <li class="next">
+                        <a href="#">Older Posts &rarr;</a>
+                    </li>
+                </ul>
+                %>
+            </div>
         </div>
-    </main>
+    </div>
+
+    <hr>
+
 
     <footer>
         <% include ../partials/footer %>
