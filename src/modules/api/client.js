@@ -27,12 +27,14 @@ loadLastToken = function(callback) {
 deleteLastTokenAndCreateNewOne = function(callback) {
     loadLastToken(function(err, token) {
         if(err) {
+            console.error(err);
             return callback(err);
         }
         if(token) {
             token.remove(loadLastToken(callback));
+        } else {
+            loadLastToken(callback);
         }
-        loadLastToken(callback);
     });
 }
 
@@ -41,6 +43,7 @@ deleteLastTokenAndCreateNewOne = function(callback) {
 getToken = function(callback) {
     loadLastToken(function(err, token) {
         if(err) {
+            console.error(err);
             return callback(err);
         }
         if(!token) {
@@ -50,12 +53,14 @@ getToken = function(callback) {
         if(tokenObject.expired()) {
             tokenObject.refresh((err, result) => {
                 if(err) {
+                    console.error(err);
                     return callback(err);
                 }
                 saveToken(false, result);
             });
+        } else {
+            return callback(false, token);
         }
-        return callback(false, token);
     });
 }
 
@@ -64,11 +69,13 @@ createToken = function(callback) {
     oauth2.ownerPassword.getToken({
         username: process.env.JAMB_API_USERNAME,
         password: process.env.JAMB_API_PASSWORD
-    }, saveToken);
+    }, function(err,result) {
+        return saveToken(err, result, callback);
+    });
 }
 
 // 
-saveToken = function(err, result) {
+saveToken = function(err, result, callback) {
     if(err) {
         return console.error('Access Token Error', err.message);
     }
@@ -80,16 +87,21 @@ saveToken = function(err, result) {
     tokenModelToSave.save(function(err) {
         if(err) {
             console.error('Could not save token', err.message);
+            return callback(err);
         }
+        return callback(false, result);
     });
 }
 
 exports.getPosts = function(callback) {
     getToken(function(err, token) {
         if(err) {
+            console.error('there is an error in callback of getToken');
+            console.error(err);
             return callback(err);
         }
         if(!token) {
+            console.error('token not found in callback of getToken');
             return callback('auth error!');
         }
         var client = new restClient();
@@ -97,12 +109,18 @@ exports.getPosts = function(callback) {
             headers: {'Authorization': 'Bearer ' + token.access_token}
         }, function(data, response) {
             if(response.statusCode == 401) {
-                deleteLastTokenAndCreateNewOne(exports.getPosts(callback));
-            }
-            if(response.statusCode != 200) {
+                console.error('our token is invalid. so let\'s create a new one!');
+                deleteLastTokenAndCreateNewOne(
+                    function() {
+                        exports.getPosts(callback)
+                    });
+            } else if(response.statusCode != 200) {
+                console.error('we could not fetch posts');
+                console.error(response.statusMessage);
                 callback(response.statusMessage);
+            } else {
+                callback(false, data);
             }
-            callback(false, data);
         });
     });
 }
