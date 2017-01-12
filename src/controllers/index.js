@@ -3,10 +3,7 @@ var client = require('../modules/api/client');
 var timeFilter = require('../modules/filters/post/timeFilter');
 
 exports.getIndex = function(req, res) {
-    client.getPosts(function(err, responseData) {
-        if(err) {
-            return handleError(err, res);
-        }
+    client.getPosts().then(function(responseData) {
         timeFilter.filter(responseData, function(err, posts) {
             if(err) {
                 return handleError(err, res);
@@ -16,7 +13,9 @@ exports.getIndex = function(req, res) {
                 'now': new Date()
             });
         });
-    });    
+    }, function(err) {
+        return handleError(err, res);
+    });
 }
 
 function handleError(err, res) {
