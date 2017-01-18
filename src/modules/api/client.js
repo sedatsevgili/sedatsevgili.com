@@ -127,11 +127,30 @@ afterCallApi = function(data, response) {
     });
 }
 
+buildRequestUri = function(options) {
+    var uri = process.env.JAMB_API_HOST + '/posts';
+    var queryOptions = [];
+    if (options.skip) {
+        queryOptions.skip = options.skip;
+    }
+    if (options.limit) {
+        queryOptions.limit = options.limit;
+    }
+    if (Object.keys(queryOptions).length > 0) {
+        uri = uri + '?';
+        for(key in queryOptions) {
+            var uriPart = key + '=' + queryOptions[key];
+            uri = uri + uriPart;
+        }
+    }
+    return uri;
+}
 
-exports.getPosts = function() {
+
+exports.getPosts = function(options) {
     return new Promise(function(resolve, reject) {
         getToken().then(function(token) {
-            restClient.get(process.env.JAMB_API_HOST + '/posts', {
+            restClient.get(buildRequestUri(options), {
                 headers: {'Authorization': 'Bearer ' + token.access_token}
             }, function(data, response) {
                 return afterCallApi(data, response).then(function(data) { resolve(data) });

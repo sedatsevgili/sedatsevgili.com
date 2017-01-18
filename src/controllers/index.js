@@ -3,7 +3,7 @@ var client = require('../modules/api/client');
 var timeFilter = require('../modules/filters/post/timeFilter');
 
 exports.getIndex = function(req, res) {
-    client.getPosts().then(function(responseData) {
+    client.getPosts([]).then(function(responseData) {
         timeFilter.filter(responseData, function(err, posts) {
             if(err) {
                 return handleError(err, res);
