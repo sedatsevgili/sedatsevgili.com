@@ -10,7 +10,8 @@
     "mongoose": "^4.7.4",
     "node-rest-client": "^2.0.1",
     "promise": "^7.1.1",
-    "simple-oauth2": "^1.0.2"
+    "simple-oauth2": "^1.0.2",
+    "webpack": "^1.14.0"
   },
   "devDependencies": {},
   "scripts": {
