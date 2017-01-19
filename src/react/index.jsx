@@ -1,12 +1,14 @@
 import React from 'react';
 import {render} from 'react-dom';
+import App from './components/App.js';
+import Footer from './components/Footer.js';
+import Header from './components/Header.js';
+import Posts from './components/Posts.js';
 
-class App extends React.Component {
-    render() {
-        return (
-            <p>Hello World!</p>
-        );
-    }
-}
-
-render(<App />, document.getElementById('app'));
+render(
+    <App>
+        <Header />
+        <Posts />
+        <Footer />
+    </App>
+    , document.getElementById('app'));
