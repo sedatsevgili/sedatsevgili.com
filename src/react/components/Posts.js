@@ -5,17 +5,33 @@ export default class Posts extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            posts: []
+            posts: [],
+            skip: 0
         };
+        this.handleOlderPostsClick = this.handleOlderPostsClick.bind(this);
+        this.handleNewerPostsClick = this.handleNewerPostsClick.bind(this);
     }
 
     componentDidMount() {
         axios.get('/posts').then(res => {
-            this.setState({posts: res.data.posts});
+            this.setState({posts: res.data.posts, skip:0});
+        });
+    }
+
+    handleOlderPostsClick() {
+        axios.get('/posts?skip=' + (this.state.skip + 10)).then(res => {
+            this.setState({posts: res.data.posts, skip: (this.state.skip + 10)});
+        });
+    }
+
+    handleNewerPostsClick() {
+        axios.get('/posts?skip=' + (this.state.skip - 10)).then(res => {
+            this.setState({posts: res.data.posts, skip: (this.state.skip - 10)});
         });
     }
 
     render() {
+        const currentSkip = this.state.skip;
 
         return (
             <div className="container">
@@ -32,16 +48,16 @@ export default class Posts extends React.Component {
                             </div>
                         )}
                         <hr />
-                        {/*<% }); %>
-                        <!-- Pager -->
-                        <%#
-                        <ul class="pager">
-                            <li class="next">
-                                <a href="#">Older Posts &rarr;</a>
+                        <ul className="pager">
+                            {currentSkip > 0 &&
+                            <li className="previous">
+                                <a href="javascript:void(0);" onClick={this.handleNewerPostsClick}>Newer Posts &larr;</a>
+                            </li>        
+                            }
+                            <li className="next">
+                                <a href="javascript:void(0);" onClick={this.handleOlderPostsClick}>Older Posts &rarr;</a>
                             </li>
                         </ul>
-                        %>
-                        */}
                     </div>
                 </div>
             </div>

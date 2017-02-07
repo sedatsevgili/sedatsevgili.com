@@ -22356,8 +22356,11 @@
 	        var _this = _possibleConstructorReturn(this, (Posts.__proto__ || Object.getPrototypeOf(Posts)).call(this, props));
 	
 	        _this.state = {
-	            posts: []
+	            posts: [],
+	            skip: 0
 	        };
+	        _this.handleOlderPostsClick = _this.handleOlderPostsClick.bind(_this);
+	        _this.handleNewerPostsClick = _this.handleNewerPostsClick.bind(_this);
 	        return _this;
 	    }
 	
@@ -22367,12 +22370,31 @@
 	            var _this2 = this;
 	
 	            _axios2.default.get('/posts').then(function (res) {
-	                _this2.setState({ posts: res.data.posts });
+	                _this2.setState({ posts: res.data.posts, skip: 0 });
+	            });
+	        }
+	    }, {
+	        key: 'handleOlderPostsClick',
+	        value: function handleOlderPostsClick() {
+	            var _this3 = this;
+	
+	            _axios2.default.get('/posts?skip=' + (this.state.skip + 10)).then(function (res) {
+	                _this3.setState({ posts: res.data.posts, skip: _this3.state.skip + 10 });
+	            });
+	        }
+	    }, {
+	        key: 'handleNewerPostsClick',
+	        value: function handleNewerPostsClick() {
+	            var _this4 = this;
+	
+	            _axios2.default.get('/posts?skip=' + (this.state.skip - 10)).then(function (res) {
+	                _this4.setState({ posts: res.data.posts, skip: _this4.state.skip - 10 });
 	            });
 	        }
 	    }, {
 	        key: 'render',
 	        value: function render() {
+	            var currentSkip = this.state.skip;
 	
 	            return _react2.default.createElement(
 	                'div',
@@ -22403,7 +22425,29 @@
 	                                )
 	                            );
 	                        }),
-	                        _react2.default.createElement('hr', null)
+	                        _react2.default.createElement('hr', null),
+	                        _react2.default.createElement(
+	                            'ul',
+	                            { className: 'pager' },
+	                            currentSkip > 0 && _react2.default.createElement(
+	                                'li',
+	                                { className: 'previous' },
+	                                _react2.default.createElement(
+	                                    'a',
+	                                    { href: 'javascript:void(0);', onClick: this.handleNewerPostsClick },
+	                                    'Newer Posts \u2190'
+	                                )
+	                            ),
+	                            _react2.default.createElement(
+	                                'li',
+	                                { className: 'next' },
+	                                _react2.default.createElement(
+	                                    'a',
+	                                    { href: 'javascript:void(0);', onClick: this.handleOlderPostsClick },
+	                                    'Older Posts \u2192'
+	                                )
+	                            )
+	                        )
 	                    )
 	                )
 	            );
