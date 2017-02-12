@@ -9,6 +9,7 @@ app.set('view engine', 'ejs');
 app.use(express.static('public'));
 
 router.route('/').get(indexController.getIndex);
+router.route('/skip/:skip').get(indexController.getIndex);
 router.route('/posts').get(postController.getPosts);
 app.use('/', router);
 

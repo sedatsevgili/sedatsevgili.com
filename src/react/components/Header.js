@@ -3,7 +3,7 @@ import React from 'react';
 export default class Header extends React.Component {
     render() {
         var styleOfHeader = {
-            backgroundImage: 'url(img/thought.jpg)',
+            backgroundImage: 'url(/img/thought.jpg)',
             backgroundRepeat: 'no-repeat',
             backgroundPosition: '50% 70%'
         };
