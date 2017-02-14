@@ -11,9 +11,10 @@ export default class Posts extends React.Component {
         };
         this.handleOlderPostsClick = this.handleOlderPostsClick.bind(this);
         this.handleNewerPostsClick = this.handleNewerPostsClick.bind(this);
+        this.init();
     }
 
-    componentDidMount() {
+    init() {
         axios.get('/posts?skip=' + this.props.skip).then(res => {
             this.setState({posts: res.data.posts, skip:this.props.skip});
         });
