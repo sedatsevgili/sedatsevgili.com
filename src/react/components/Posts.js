@@ -1,6 +1,7 @@
 import React from 'react';
 import axios from 'axios';
 import { Link } from 'react-router';
+import Post from './Post.js';
 
 export default class Posts extends React.Component {
     constructor(props) {
@@ -50,14 +51,7 @@ export default class Posts extends React.Component {
                 <div className="row">
                     <div className="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
                         {this.state.posts.map(post => 
-                            <div className="post-preview">
-                                <a>
-                                    <h2 className="post-subtitle">
-                                        {post.content}
-                                    </h2>
-                                </a>
-                                <p className="post-meta">{post.createdAt}</p>
-                            </div>
+                            <Post key={post.id} post={post} />
                         )}
                         <hr />
                         <ul className="pager">
