@@ -41,3 +41,5 @@ jspm_packages
 
 # ecosystem config
 ecosystem.config.js
+
+public/js/main-bundle-*
