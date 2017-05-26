@@ -45,16 +45,11 @@ module.exports = class Client {
         return new Promise((resolve, reject) => {
             this.loadLastToken().then((lastToken) => {
                 if (lastToken) {
-                    lastToken.remove(() => {
-                        this.getToken().then((token) => {
-                            return resolve(token);
-                        })
-                    });
-                } else {
-                    this.getToken().then((token) => {
-                        return resolve(token);
-                    });
+                    lastToken.remove();
                 }
+                this.getToken().then((token) => {
+                    return resolve(token);
+                });
             });
         });
     }
@@ -112,13 +107,7 @@ module.exports = class Client {
 
     afterCallApi(data, response) {
         return new Promise((resolve, reject) => {
-            if(response.statusCode == 401) {
-                console.error('our token is invalid. so let\'s create a new one!');
-                return this.deleteLastTokenAndCreateNewOne().then(() => {
-                        return exports.getPosts().then((data) => { resolve(data); });
-                    }
-                );
-            } else if(response.statusCode != 200) {
+            if(response.statusCode != 200) {
                 console.error('we could not fetch posts');
                 console.error(response.statusMessage);
                 return reject(new Error(response.statusMessage));
@@ -154,7 +143,7 @@ module.exports = class Client {
                 this.restClient.get(requestUri, {
                     headers: {'Authorization': 'Bearer ' + token.access_token}
                 }, (data, response) => {
-                    return this.afterCallApi(data, response).then((data) => { return resolve (data);});
+                    return this.afterCallApi(data, response).then((data) => { resolve (data);});
                 });
             });
         });
