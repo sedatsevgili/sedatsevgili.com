@@ -5,28 +5,17 @@ var Promise = require('promise');
 
 module.exports = class Client {
 
-    constructor() {
-        this.oauthClient = oauth2Module.create(this.getOAuthCredentials());
+    constructor(oauthCredentials, username, password) {
+        this.oauthClient = oauth2Module.create(oauthCredentials);
         this.restClient = new RestClient();
-    }
-
-    getOAuthCredentials() {
-        return {
-            client: {
-                id: process.env.JAMB_API_CLIENT_ID,
-                secret: process.env.JAMB_API_CLIENT_SECRET
-            },
-            auth: {
-                tokenHost: process.env.JAMB_API_HOST,
-                tokenPath: '/oauth2/token'
-            }
-        };
+        this.username = username;
+        this.password = password;
     }
 
     getUserCredentials() {
         return {
-            username: process.env.JAMB_API_USERNAME,
-            password: process.env.JAMB_API_PASSWORD
+            username: this.username,
+            password: this.password
         };
     }
 
@@ -105,7 +94,7 @@ module.exports = class Client {
         });
     }
 
-    afterCallApi(data, response) {
+    checkResponse(data, response) {
         return new Promise((resolve, reject) => {
             if(response.statusCode != 200) {
                 console.error('we could not fetch posts');
@@ -143,7 +132,7 @@ module.exports = class Client {
                 this.restClient.get(requestUri, {
                     headers: {'Authorization': 'Bearer ' + token.access_token}
                 }, (data, response) => {
-                    return this.afterCallApi(data, response).then((data) => { resolve (data);});
+                    return this.checkResponse(data, response).then((data) => { resolve (data);});
                 });
             });
         });
