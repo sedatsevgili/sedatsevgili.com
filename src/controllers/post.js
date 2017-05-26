@@ -1,4 +1,4 @@
-var client = require('../modules/api/client');
+var Client = require('../modules/api/Client');
 var timeFilter = require('../modules/filters/post/timeFilter');
 
 exports.getPosts = function(req, res) {
@@ -6,6 +6,7 @@ exports.getPosts = function(req, res) {
     if (req.query.skip) {
         options.skip = req.query.skip;
     }
+    var client = new Client();
     client.getPosts(options).then(function(responseData) {
         timeFilter.filter(responseData, function(err, posts) {
             if(err) {

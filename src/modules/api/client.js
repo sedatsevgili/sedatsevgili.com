@@ -3,161 +3,161 @@ var oauth2Module = require('simple-oauth2');
 var RestClient = require('node-rest-client').Client;
 var Promise = require('promise');
 
-const credentials = {
-    client: {
-        id: process.env.JAMB_API_CLIENT_ID,
-        secret: process.env.JAMB_API_CLIENT_SECRET
-    },
-    auth: {
-        tokenHost: process.env.JAMB_API_HOST,
-        tokenPath: '/oauth2/token'
+module.exports = class Client {
+
+    constructor() {
+        this.oauthClient = oauth2Module.create(this.getOAuthCredentials());
+        this.restClient = new RestClient();
     }
-};
 
-var oauth2 = oauth2Module.create(credentials);
-var restClient = new RestClient();
-
-loadLastToken = function() {
-    return new Promise(function(resolve, reject) {
-        Token.findOne({}, function(err, token) {
-            if(err) {
-                return reject(err);
+    getOAuthCredentials() {
+        return {
+            client: {
+                id: process.env.JAMB_API_CLIENT_ID,
+                secret: process.env.JAMB_API_CLIENT_SECRET
+            },
+            auth: {
+                tokenHost: process.env.JAMB_API_HOST,
+                tokenPath: '/oauth2/token'
             }
-            return resolve(token);
-        }).sort({'_id': 1});
-    });
-}
+        };
+    }
 
-deleteLastTokenAndCreateNewOne = function() {
-    return new Promise(function(resolve, reject) {
-        loadLastToken().then(function(token) {
-            if(token) {
-                token.remove(loadLastToken().then(function(token) {
-                    return resolve(token);
-                }));
-            } else {
-                loadLastToken().then(function(token) {
-                    return resolve(token);
-                });
-            }
-        }, function(err) {
-            console.error(err);
-            return reject(err);
-        })
-    });
-}
-
-// fetches last token from storage
-// if there is no token, creates one.
-getToken = function() {
-    return new Promise(function(resolve, reject) {
-        loadLastToken().then(function(token) {
-            if(!token) {
-                return createToken().then(function(token) { resolve(token); });
-            }
-
-            var tokenObject = oauth2.accessToken.create(token);
-            if(!tokenObject.expired()) {
-                return resolve(token);
-            }
-            tokenObject.refresh((err, result) => {
-                if(err) {
-                    console.error(err);
-                    return reject(err);
-                }
-                return saveToken(result).then(function() { resolve(token); });
-            });
-        }, function(err) {
-            console.error(err);
-            return reject(err);
-        });
-    });
-}
-
-// creates a valid token for api
-createToken = function() {
-    return new Promise(function(resolve, reject) {
-        oauth2.ownerPassword.getToken({
+    getUserCredentials() {
+        return {
             username: process.env.JAMB_API_USERNAME,
             password: process.env.JAMB_API_PASSWORD
-        }, function(err,result) {
-            if(err) {
-                console.error('Access Token Error', err.message)
-                return reject(err);
-            }
-            return saveToken(result).then(function() { resolve(result) });
-        });
-    });
-}
+        };
+    }
 
-// 
-saveToken = function(result) {
-    return new Promise(function(resolve, reject) {
-        createdTokenObject = oauth2.accessToken.create(result);
-        tokenModelToSave = new Token();
-        tokenModelToSave.access_token = createdTokenObject.token.access_token;
-        tokenModelToSave.refresh_token = createdTokenObject.token.refresh_token;
-        tokenModelToSave.expires_in = createdTokenObject.token.expires_in;
-        tokenModelToSave.save(function(err) {
-            if(err) {
-                console.error('Could not save token', err.message);
-                return reject(err);
-            }
-            return resolve(result);
-        });
-    });
-}
-
-afterCallApi = function(data, response) {
-    return new Promise(function(resolve, reject) {
-        if(response.statusCode == 401) {
-            console.error('our token is invalid. so let\'s create a new one!');
-            return deleteLastTokenAndCreateNewOne().then(
-                function() {
-                    return exports.getPosts().then(function(data) { resolve(data); });
+    loadLastToken() {
+        return new Promise((resolve, reject) => {
+            Token.findOne({}, (err, token) => {
+                if(err) {
+                    return reject(err);
                 }
-            );
-        } else if(response.statusCode != 200) {
-            console.error('we could not fetch posts');
-            console.error(response.statusMessage);
-            return reject(new Error(response.statusMessage));
-        } else {
-            return resolve(data);
-        }
-    });
-}
-
-buildRequestUri = function(options) {
-    var uri = process.env.JAMB_API_HOST + '/posts';
-    var queryOptions = [];
-    if (options.skip) {
-        queryOptions.skip = options.skip;
-    }
-    if (options.limit) {
-        queryOptions.limit = options.limit;
-    }
-    if (Object.keys(queryOptions).length > 0) {
-        uri = uri + '?';
-        for(key in queryOptions) {
-            var uriPart = key + '=' + queryOptions[key];
-            uri = uri + uriPart;
-        }
-    }
-    return uri;
-}
-
-
-exports.getPosts = function(options) {
-    return new Promise(function(resolve, reject) {
-        getToken().then(function(token) {
-            restClient.get(buildRequestUri(options), {
-                headers: {'Authorization': 'Bearer ' + token.access_token}
-            }, function(data, response) {
-                return afterCallApi(data, response).then(function(data) { resolve(data) });
-            });
-        }, function(err) {
-            console.error(err);
-            return reject(err);
+                return resolve(token);
+            }).sort({'_id': 1});
         });
-    });
+    }
+
+    deleteLastTokenAndCreateNewOne() {
+        return new Promise((resolve, reject) => {
+            this.loadLastToken().then((lastToken) => {
+                if (lastToken) {
+                    lastToken.remove(() => {
+                        this.getToken().then((token) => {
+                            return resolve(token);
+                        })
+                    });
+                } else {
+                    this.getToken().then((token) => {
+                        return resolve(token);
+                    });
+                }
+            });
+        });
+    }
+
+    getToken() {
+        return new Promise((resolve, reject) => {
+            this.loadLastToken().then((token) => {
+                if(!token) {
+                    return this.createToken().then((token) => { resolve(token); });
+                }
+
+                var tokenObject = this.oauthClient.accessToken.create(token);
+                if(!tokenObject.expired()) {
+                    return resolve(token);
+                }
+                tokenObject.refresh((err, result) => {
+                    if(err) {
+                        console.error(err);
+                        return reject(err);
+                    }
+                    return this.saveToken(result).then(() => { resolve(token); });
+                });
+            });
+        });
+    }
+
+    createToken() {
+        return new Promise((resolve, reject) => {
+            this.oauthClient.ownerPassword.getToken(this.getUserCredentials(), (err,result) => {
+                if(err) {
+                    console.error('Access Token Error', err.message)
+                    return reject(err);
+                }
+                return this.saveToken(result).then(() => { resolve(result) });
+            });
+        });
+    }
+
+    saveToken(result) {
+        return new Promise((resolve, reject) => {
+            let createdTokenObject = this.oauthClient.accessToken.create(result);
+            let tokenModelToSave = new Token();
+            tokenModelToSave.access_token = createdTokenObject.token.access_token;
+            tokenModelToSave.refresh_token = createdTokenObject.token.refresh_token;
+            tokenModelToSave.expires_in = createdTokenObject.token.expires_in;
+            tokenModelToSave.save((err) => {
+                if(err) {
+                    console.error('Could not save token', err.message);
+                    return reject(err);
+                }
+                return resolve(result);
+            });
+        });
+    }
+
+    afterCallApi(data, response) {
+        return new Promise((resolve, reject) => {
+            if(response.statusCode == 401) {
+                console.error('our token is invalid. so let\'s create a new one!');
+                return this.deleteLastTokenAndCreateNewOne().then(() => {
+                        return exports.getPosts().then((data) => { resolve(data); });
+                    }
+                );
+            } else if(response.statusCode != 200) {
+                console.error('we could not fetch posts');
+                console.error(response.statusMessage);
+                return reject(new Error(response.statusMessage));
+            } else {
+                return resolve(data);
+            }
+        });
+    }
+
+    buildRequestUri(options) {
+        var uri = process.env.JAMB_API_HOST + '/posts';
+        var queryOptions = [];
+        if (options.skip) {
+            queryOptions.skip = options.skip;
+        }
+        if (options.limit) {
+            queryOptions.limit = options.limit;
+        }
+        if (Object.keys(queryOptions).length > 0) {
+            uri = uri + '?';
+            for(const key in queryOptions) {
+                var uriPart = key + '=' + queryOptions[key];
+                uri = uri + uriPart;
+            }
+        }
+        return uri;
+    }
+
+    getPosts(options) {
+        return new Promise((resolve, reject) => {
+            this.getToken().then((token) => {
+                let requestUri = this.buildRequestUri(options);
+                this.restClient.get(requestUri, {
+                    headers: {'Authorization': 'Bearer ' + token.access_token}
+                }, (data, response) => {
+                    return this.afterCallApi(data, response).then((data) => { return resolve (data);});
+                });
+            });
+        });
+    }
+
 }
