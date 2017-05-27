@@ -5,18 +5,11 @@ var Promise = require('promise');
 
 module.exports = class Client {
 
-    constructor(oauthCredentials, username, password) {
-        this.oauthClient = oauth2Module.create(oauthCredentials);
+    constructor(config) {
+        this.oauthClient = oauth2Module.create(config.getClientCredentials());
+        this.userCredentials = config.getUserCredentials();
         this.restClient = new RestClient();
-        this.username = username;
-        this.password = password;
-    }
-
-    getUserCredentials() {
-        return {
-            username: this.username,
-            password: this.password
-        };
+        this.apiHost = config.getApiHost();
     }
 
     loadLastToken() {
@@ -27,19 +20,6 @@ module.exports = class Client {
                 }
                 return resolve(token);
             }).sort({'_id': 1});
-        });
-    }
-
-    deleteLastTokenAndCreateNewOne() {
-        return new Promise((resolve, reject) => {
-            this.loadLastToken().then((lastToken) => {
-                if (lastToken) {
-                    lastToken.remove();
-                }
-                this.getToken().then((token) => {
-                    return resolve(token);
-                });
-            });
         });
     }
 
@@ -67,7 +47,7 @@ module.exports = class Client {
 
     createToken() {
         return new Promise((resolve, reject) => {
-            this.oauthClient.ownerPassword.getToken(this.getUserCredentials(), (err,result) => {
+            this.oauthClient.ownerPassword.getToken(this.userCredentials, (err,result) => {
                 if(err) {
                     console.error('Access Token Error', err.message)
                     return reject(err);
@@ -107,7 +87,7 @@ module.exports = class Client {
     }
 
     buildRequestUri(options) {
-        var uri = process.env.JAMB_API_HOST + '/posts';
+        var uri = this.apiHost + options.uri;
         var queryOptions = [];
         if (options.skip) {
             queryOptions.skip = options.skip;
@@ -125,17 +105,29 @@ module.exports = class Client {
         return uri;
     }
 
-    getPosts(options) {
+    buildAuthorizationHeader(token) {
+        return {
+            headers: {'Authorization': 'Bearer ' + token.access_token}
+        };
+    }
+
+    callApi(options) {
         return new Promise((resolve, reject) => {
             this.getToken().then((token) => {
                 let requestUri = this.buildRequestUri(options);
-                this.restClient.get(requestUri, {
-                    headers: {'Authorization': 'Bearer ' + token.access_token}
-                }, (data, response) => {
+                let apiMethod = options.method;
+                let headers = this.buildAuthorizationHeader(token);
+                this.restClient[apiMethod](requestUri, headers, (data, response) => {
                     return this.checkResponse(data, response).then((data) => { resolve (data);});
                 });
             });
         });
+    }
+
+    getPosts(options) {
+        options.uri = '/posts';
+        options.method = 'get';
+        return this.callApi(options);
     }
 
 }

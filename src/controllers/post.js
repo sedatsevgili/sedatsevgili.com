@@ -1,4 +1,5 @@
 var Client = require('../modules/api/Client');
+var Config = require('../modules/api/Config');
 var timeFilter = require('../modules/filters/post/timeFilter');
 
 exports.getPosts = function(req, res) {
@@ -6,17 +7,8 @@ exports.getPosts = function(req, res) {
     if (req.query.skip) {
         options.skip = req.query.skip;
     }
-    var oauthCredentials = {
-        client: {
-            id: process.env.JAMB_API_CLIENT_ID,
-            secret: process.env.JAMB_API_CLIENT_SECRET
-        },
-        auth: {
-            tokenHost: process.env.JAMB_API_HOST,
-            tokenPath: '/oauth2/token'
-        }
-    };
-    var client = new Client(oauthCredentials, process.env.JAMB_API_USERNAME, process.env.JAMB_API_PASSWORD);
+    let clientConfig = new Config();
+    var client = new Client(clientConfig);
     client.getPosts(options).then(function(responseData) {
         timeFilter.filter(responseData, function(err, posts) {
             if(err) {
