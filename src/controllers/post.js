@@ -7,9 +7,11 @@ exports.getPosts = function(req, res) {
     if (req.query.skip) {
         options.skip = req.query.skip;
     }
+    options.uri = '/posts';
+    options.method = 'get';
     let clientConfig = new Config();
     var client = new Client(clientConfig);
-    client.getPosts(options).then(function(responseData) {
+    client.callApi(options).then(function(responseData) {
         timeFilter.filter(responseData, function(err, posts) {
             if(err) {
                 return handleError(err, res);

@@ -124,10 +124,4 @@ module.exports = class Client {
         });
     }
 
-    getPosts(options) {
-        options.uri = '/posts';
-        options.method = 'get';
-        return this.callApi(options);
-    }
-
 }
