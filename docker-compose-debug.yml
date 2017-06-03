@@ -1,0 +1,45 @@
+version: '3'
+services:
+  ss_web:
+    image: sedatsevgili/ss_web:latest
+    links:
+      - mongo
+    external_links:
+      - jambapi_web
+    ports:
+      - 8080:8080
+      - 5858:5858
+    command: node --debug=5858 src/server.js  
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      JAMB_API_HOST: "http://jambapi_web:3000"
+      JAMB_API_CLIENT_ID: "123"
+      JAMB_API_CLIENT_SECRET: "456"
+      JAMB_API_USERNAME: "deneme"
+      JAMB_API_PASSWORD: "deneme123"
+      SS_MONGODB_URI: "mongodb://mongo:27018/ss"
+      NODE_ENV: development
+    networks:
+      - default
+      - jambapi_default
+  mongo:
+    image: mongo
+    command: mongod --port 27018
+    
+  mongo-admin:
+    links:
+      - mongo
+    image: mongo-express
+    environment:
+      ME_CONFIG_MONGODB_PORT: 27018
+    ports:
+      - 8082:8081
+
+networks:
+  jambapi_default:
+    external: true
+
+   
+  
