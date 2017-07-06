@@ -9,7 +9,7 @@ services:
     ports:
       - 8080:8080
       - 5858:5858
-    command: node --debug=5858 src/server.js  
+    command: node --inspect=0.0.0.0:5858 src/server.js  
     volumes:
       - .:/app
       - /app/node_modules

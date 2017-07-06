@@ -10,35 +10,50 @@ module.exports = class Client {
         this.userCredentials = config.getUserCredentials();
         this.restClient = new RestClient();
         this.apiHost = config.getApiHost();
+        this.isDebugEnabled = config.isDebugEnabled();
     }
 
     loadLastToken() {
+        this.debug('loading last token');
         return new Promise((resolve, reject) => {
             Token.findOne({}, (err, token) => {
                 if(err) {
+                    this.debug('we have an error in loadLastToken');
+                    this.debug(err);
                     return reject(err);
                 }
+                this.debug('token is loaded!');
+                this.debug(token);
                 return resolve(token);
             }).sort({'_id': 1});
         });
     }
 
     getToken() {
+        this.debug('getting token');
         return new Promise((resolve, reject) => {
             this.loadLastToken().then((token) => {
                 if(!token) {
+                    this.debug('last token does not exist. so we are creating a new one.');
                     return this.createToken().then((token) => { resolve(token); });
                 }
 
+                this.debug('creating tokenObject via token document fetched from db');
                 var tokenObject = this.oauthClient.accessToken.create(token);
                 if(!tokenObject.expired()) {
+                    this.debug('created tokenObject is not expired!. so, it is useful!');
                     return resolve(token);
                 }
+                
+                this.debug('refreshing tokenObject.');
                 tokenObject.refresh((err, result) => {
+                    this.debug('refreshed tokenObject');
                     if(err) {
+                        this.debug('we have an error when refreshing tokenObject.');
                         console.error(err);
                         return reject(err);
                     }
+                    this.debug('saving refreshed token');
                     return this.saveToken(result).then(() => { resolve(token); });
                 });
             });
@@ -46,18 +61,23 @@ module.exports = class Client {
     }
 
     createToken() {
+        this.debug('creating token');
         return new Promise((resolve, reject) => {
             this.oauthClient.ownerPassword.getToken(this.userCredentials, (err,result) => {
+                this.debug('got new token from ownerpassword authentication');
+                this.debug(result);
                 if(err) {
                     console.error('Access Token Error', err.message)
                     return reject(err);
                 }
+                this.debug('saving new token fetched from authentication');
                 return this.saveToken(result).then(() => { resolve(result) });
             });
         });
     }
 
     saveToken(result) {
+        this.debug('saving token');
         return new Promise((resolve, reject) => {
             let createdTokenObject = this.oauthClient.accessToken.create(result);
             let tokenModelToSave = new Token();
@@ -65,6 +85,7 @@ module.exports = class Client {
             tokenModelToSave.refresh_token = createdTokenObject.token.refresh_token;
             tokenModelToSave.expires_in = createdTokenObject.token.expires_in;
             tokenModelToSave.save((err) => {
+                this.debug('token saved');
                 if(err) {
                     console.error('Could not save token', err.message);
                     return reject(err);
@@ -75,6 +96,7 @@ module.exports = class Client {
     }
 
     checkResponse(data, response) {
+        this.debug('checking response');
         return new Promise((resolve, reject) => {
             if(response.statusCode != 200) {
                 console.error('we could not fetch posts');
@@ -87,6 +109,8 @@ module.exports = class Client {
     }
 
     buildRequestUri(options) {
+        this.debug('building request uri');
+        this.debug(options);
         var uri = this.apiHost + options.uri;
         var queryOptions = [];
         if (options.skip) {
@@ -106,12 +130,15 @@ module.exports = class Client {
     }
 
     buildAuthorizationHeader(token) {
+        this.debug('building authorization header');
         return {
             headers: {'Authorization': 'Bearer ' + token.access_token}
         };
     }
 
     callApi(options) {
+        this.debug('calling api');
+        this.debug(options);
         return new Promise((resolve, reject) => {
             this.getToken().then((token) => {
                 let requestUri = this.buildRequestUri(options);
@@ -123,5 +150,13 @@ module.exports = class Client {
             });
         });
     }
+
+    debug(message) {
+        if (!this.isDebugEnabled) {
+            return;
+        }
+        console.log(message);
+    }
+    
 
 }

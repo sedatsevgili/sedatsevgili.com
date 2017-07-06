@@ -1,4 +1,4 @@
-FROM node:boron
+FROM node:latest
 
 # copy app and install deps
 RUN mkdir /app

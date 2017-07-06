@@ -15,7 +15,8 @@ module.exports = class Config {
             api: {
                 host: process.env.JAMB_API_HOST,
                 tokenPath: '/oauth2/token'
-            }
+            },
+            debug: process.env.NODE_ENV == 'development'
         }
     }
 
@@ -35,6 +36,10 @@ module.exports = class Config {
 
     getApiHost() {
         return this.data.api.host;
+    }
+
+    isDebugEnabled() {
+        return this.data.debug;
     }
 
 }
