@@ -1,4 +1,4 @@
-var Client = require('../modules/api/Client');
+var Client = require('../modules/api/client');
 var Config = require('../modules/api/Config');
 var timeFilter = require('../modules/filters/post/timeFilter');
 
